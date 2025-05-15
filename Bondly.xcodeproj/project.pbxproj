@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E96882062DCB16E900337D33 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = E96882052DCB16E900337D33 /* FirebaseFirestore */; };
+		E98BF59D2DCA78FB00177315 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = E98BF59C2DCA78FB00177315 /* FirebaseAuth */; };
+		E9FADA8A2DCB27B300D3B05C /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = E9FADA892DCB27B300D3B05C /* FirebaseDatabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		E98BF5792DCA763B00177315 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +35,30 @@
 		E98BF5822DCA763B00177315 /* BondlyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BondlyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E98BF5992DCA77DF00177315 /* Exceptions for "Bondly" folder in "BondlyTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"GoogleService-Info.plist",
+			);
+			target = E98BF5772DCA763B00177315 /* BondlyTests */;
+		};
+		E98BF59A2DCA77DF00177315 /* Exceptions for "Bondly" folder in "BondlyUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"GoogleService-Info.plist",
+			);
+			target = E98BF5812DCA763B00177315 /* BondlyUITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E98BF56D2DCA763A00177315 /* Bondly */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E98BF5992DCA77DF00177315 /* Exceptions for "Bondly" folder in "BondlyTests" target */,
+				E98BF59A2DCA77DF00177315 /* Exceptions for "Bondly" folder in "BondlyUITests" target */,
+			);
 			path = Bondly;
 			sourceTree = "<group>";
 		};
@@ -52,6 +79,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E9FADA8A2DCB27B300D3B05C /* FirebaseDatabase in Frameworks */,
+				E98BF59D2DCA78FB00177315 /* FirebaseAuth in Frameworks */,
+				E96882062DCB16E900337D33 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +142,9 @@
 			);
 			name = Bondly;
 			packageProductDependencies = (
+				E98BF59C2DCA78FB00177315 /* FirebaseAuth */,
+				E96882052DCB16E900337D33 /* FirebaseFirestore */,
+				E9FADA892DCB27B300D3B05C /* FirebaseDatabase */,
 			);
 			productName = Bondly;
 			productReference = E98BF56B2DCA763A00177315 /* Bondly.app */;
@@ -195,6 +228,9 @@
 			);
 			mainGroup = E98BF5622DCA763A00177315;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E98BF59B2DCA78FB00177315 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E98BF56C2DCA763A00177315 /* Products */;
 			projectDirPath = "";
@@ -410,7 +446,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = manish.Bondly;
+				PRODUCT_BUNDLE_IDENTIFIER = com.manish.Bondly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -438,7 +474,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = manish.Bondly;
+				PRODUCT_BUNDLE_IDENTIFIER = com.manish.Bondly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -558,6 +594,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E98BF59B2DCA78FB00177315 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.12.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E96882052DCB16E900337D33 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E98BF59B2DCA78FB00177315 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		E98BF59C2DCA78FB00177315 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E98BF59B2DCA78FB00177315 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		E9FADA892DCB27B300D3B05C /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E98BF59B2DCA78FB00177315 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E98BF5632DCA763A00177315 /* Project object */;
 }
