@@ -1,5 +1,5 @@
-
 import SwiftUI
+import FirebaseAuth
 
 struct NewBondView: View {
     @Environment(\.dismiss) private var dismiss
@@ -12,6 +12,7 @@ struct NewBondView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                // Custom tab bar
                 HStack(spacing: 0) {
                     tabButton(title: "Search", tag: 0)
                     tabButton(title: "Requests", tag: 1)
@@ -20,12 +21,14 @@ struct NewBondView: View {
                 .padding(.horizontal)
                 .padding(.top, 10)
                 
+                // Loading indicator
                 if newBondViewModel.isSearching || bondViewModel.isLoading {
                     ProgressView()
                         .foregroundStyle(Color("brandPrimary"))
                         .padding()
                 }
                 
+                // Tab content
                 Group {
                     switch activeTab {
                     case 0:
@@ -64,6 +67,8 @@ struct NewBondView: View {
         .tint(Color("brandPrimary"))
     }
     
+    // MARK: - Tab Views
+    
     private var searchTab: some View {
         List {
             if newBondViewModel.searchText.isEmpty {
@@ -85,18 +90,13 @@ struct NewBondView: View {
             } else {
                 ForEach(newBondViewModel.searchResults) { user in
                     if user.uid != userViewModel.user?.uid {
-                        VStack{
-                            HStack(spacing: 12){
-                                NavigationLink(destination: ProfileView(userId: user.uid)){
-                                    UserRow(user: user)
-                                }
-                            }
+                        NavigationLink(destination: ProfileView(userId: user.uid)) {
+                            UserRow(user: user)
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 4)
+//                        .padding(.horizontal)
+                        .padding(.top, 2)
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
-                        
                     }
                 }
             }
@@ -126,7 +126,7 @@ struct NewBondView: View {
                 ForEach(Array(currentUser.bondRequestsReceived.keys), id: \.self) { userId in
                     if let timestamp = currentUser.bondRequestsReceived[userId] {
                         BondRequestRow(userId: userId, timestamp: timestamp, type: .received)
-                            .padding(.top, 4)
+                            .padding(.top, 2)
                             .listRowSeparator(.hidden)
                             .listRowBackground(Color.clear)
                             .swipeActions(edge: .leading) {
@@ -172,7 +172,7 @@ struct NewBondView: View {
                 ForEach(Array(currentUser.bondRequestsSent.keys), id: \.self) { userId in
                     if let timestamp = currentUser.bondRequestsSent[userId] {
                         BondRequestRow(userId: userId, timestamp: timestamp, type: .sent)
-                            .padding(.top, 4)
+                            .padding(.top, 2)
                             .listRowSeparator(.hidden)
                             .listRowBackground(Color.clear)
                             .swipeActions(edge: .trailing) {
@@ -226,188 +226,5 @@ struct NewBondView: View {
     
     private func refreshUserData() async {
         await userViewModel.fetchUser(forceRefresh: true)
-    }
-}
-
-// MARK: - Supporting Views
-
-/// A reusable view for displaying user information
-struct UserRow: View {
-    let user: UserModel
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            UserAvatar(username: user.username)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(user.fullname)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                Text("@\(user.username)")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-            }
-            
-            Spacer()
-        }
-    }
-}
-
-/// A reusable view for displaying user avatars
-struct UserAvatar: View {
-    let username: String
-    var size: CGFloat = 60
-    
-    var body: some View {
-        Circle()
-            .fill(Color("brandPrimary").opacity(0.2))
-            .frame(width: size, height: size)
-            .overlay(
-                Text(String(username.prefix(1).uppercased()))
-                    .font(.title3.bold())
-                    .foregroundColor(Color("brandPrimary"))
-            )
-    }
-}
-
-/// A reusable view for empty states
-struct EmptyStateView: View {
-    let title: String
-    var message: String? = nil
-    let systemImage: String
-    var withMessage: Bool = true
-    
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: systemImage)
-                .font(.system(size: 50))
-                .foregroundColor(.gray.opacity(0.5))
-            
-            Text(title)
-                .font(.headline)
-            
-            if withMessage, let message = message {
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 50)
-    }
-}
-
-/// Enum to differentiate between received and sent requests
-enum BondRequestType {
-    case received
-    case sent
-}
-
-/// A unified view for both received and sent bond requests
-struct BondRequestRow: View {
-    let userId: String
-    let timestamp: Int
-    let type: BondRequestType
-    
-    @State private var user: UserModel?
-    @State private var isLoading = true
-    
-    var body: some View {
-        VStack {
-            if isLoading {
-                HStack {
-                    Circle()
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 60, height: 60)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(height: 14)
-                            .frame(width: 120)
-                        
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(height: 12)
-                            .frame(width: 80)
-                    }
-                    
-                    Spacer()
-                }
-                .redacted(reason: .placeholder)
-            } else if let user = user {
-                HStack(spacing: 12) {
-                    NavigationLink(destination: ProfileView(userId: user.uid)) {
-                        HStack(spacing: 12) {
-                            UserAvatar(username: user.username)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(user.fullname)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Text("@\(user.username)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                
-                                Text(formatTimestamp(timestamp))
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                            
-                            Spacer()
-                        }
-                    }
-                }
-            } else {
-                HStack {
-                    Circle()
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 50, height: 50)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Unknown User")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        Text("User not available")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer()
-                }
-            }
-        }
-        .padding(.horizontal)
-        .task {
-            await loadUser()
-        }
-    }
-    
-    private func loadUser() async {
-        isLoading = true
-        defer { isLoading = false }
-        
-        let viewModel = UserViewModel()
-        user = await viewModel.fetchSpecificUser(userId: userId)
-    }
-    
-    private func formatTimestamp(_ timestamp: Int) -> String {
-        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        return formatter.localizedString(for: date, relativeTo: Date())
-    }
-}
-
-// Helper extension for timestamp formatting
-extension Date {
-    func timeAgoDisplay() -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        return formatter.localizedString(for: self, relativeTo: Date())
     }
 }

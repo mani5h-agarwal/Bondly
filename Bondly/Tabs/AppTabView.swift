@@ -11,7 +11,6 @@ struct AppTabView: View {
     
     @State var selectedTabBottom: Int = 0
     @State private var showFABView: Bool = false
-    @EnvironmentObject var bondViewModel: BondViewModel
     @Binding var showMenu: Bool
     
     var body: some View {

@@ -8,9 +8,6 @@ import SwiftUI
 
 struct EntryPointView: View {
     @AppStorage("isLoggedIn") private var isLoggedIn = false
-    @EnvironmentObject var authViewModel: AuthViewModel
-    @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var bondViewModel: BondViewModel
     var body: some View {
         ZStack {
             if isLoggedIn {

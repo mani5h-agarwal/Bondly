@@ -10,9 +10,6 @@ import SwiftUI
 struct LoggedInView: View {
     
     @State private var showMenu: Bool = false
-    @EnvironmentObject var authViewModel: AuthViewModel
-    @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var bondViewModel: BondViewModel
     @State private var selectedTab: Tab? = .home
     
     var body: some View {

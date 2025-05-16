@@ -6,7 +6,39 @@
 ////
 import Foundation
 
-struct UserModel: Codable, Identifiable {
+
+// Base protocol for user models with common properties
+protocol UserModelProtocol: Identifiable {
+    var uid: String { get }
+    var username: String { get }
+    var fullname: String { get }
+}
+
+// Lightweight model for list displays and basic information
+struct UserPreviewModel: UserModelProtocol, Codable {
+    let uid: String
+    let username: String
+    let fullname: String
+    
+    var id: String { uid }
+    
+    // Initialize from full user model
+    init(from user: UserModel) {
+        self.uid = user.uid
+        self.username = user.username
+        self.fullname = user.fullname
+    }
+    
+    // Initialize directly
+    init(uid: String, username: String, fullname: String) {
+        self.uid = uid
+        self.username = username
+        self.fullname = fullname
+    }
+}
+
+// Complete user model for profile and detailed views
+struct UserModel: UserModelProtocol, Codable {
     let uid: String
     let username: String
     var fullname: String
@@ -19,21 +51,10 @@ struct UserModel: Codable, Identifiable {
     var bondRequestsReceived: [String: Int] // [userId: timestamp]
     let createdAt: String
     
-    var id: String {
-        return uid
-    }
+    var id: String { uid }
     
-    enum CodingKeys: String, CodingKey {
-        case uid
-        case username
-        case fullname
-        case email
-        case aboutMe
-        case bondsCount
-        case interests
-        case bondedUserIds
-        case bondRequestsSent
-        case bondRequestsReceived
-        case createdAt
+    // Create a preview from this full model
+    var preview: UserPreviewModel {
+        return UserPreviewModel(from: self)
     }
 }

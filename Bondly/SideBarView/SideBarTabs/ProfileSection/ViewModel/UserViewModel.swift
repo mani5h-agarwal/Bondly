@@ -1,3 +1,4 @@
+
 import Foundation
 import FirebaseAuth
 import FirebaseDatabase
@@ -8,8 +9,13 @@ class UserViewModel: ObservableObject {
     @Published var user: UserModel?
     @Published var isLoading = false
     @Published var errorMessage: String?
-
-    private let cacheKey = "cachedUser"
+    
+    // Cache keys
+    private let fullUserCacheKey = "cachedUser"
+    private let userPreviewsCacheKey = "cachedUserPreviews"
+    
+    // In-memory cache for user previews to reduce firebase calls
+    private var userPreviewsCache: [String: UserPreviewModel] = [:]
 
     // MARK: - Fetch Current User
     func fetchUser(forceRefresh: Bool = false) async {
@@ -47,11 +53,15 @@ class UserViewModel: ObservableObject {
                 return
             }
 
-            let userModel = try decodeUserFromFirebase(value, uid: uid)
+            let userModel = try UserModel.fromFirebaseData(value, uid: uid)
 
             DispatchQueue.main.async {
                 self.user = userModel
                 self.saveUserToCache(userModel)
+                
+                // Also cache the preview version for quick access
+                self.cacheUserPreview(userModel.preview)
+                
                 self.isLoading = false
                 print("✅ Successfully fetched and updated current user")
             }
@@ -67,7 +77,53 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Fetch Specific User
+    // MARK: - Fetch User Preview
+    func fetchUserPreview(userId: String) async -> UserPreviewModel? {
+        // Check in-memory cache first
+        if let cachedPreview = userPreviewsCache[userId] {
+            print("✅ Using in-memory cached preview for user: \(userId)")
+            return cachedPreview
+        }
+        
+        // Check UserDefaults cache next
+        if let cachedPreviews = loadUserPreviewsFromCache(),
+           let cachedPreview = cachedPreviews[userId] {
+            // Update in-memory cache and return
+            userPreviewsCache[userId] = cachedPreview
+            print("✅ Using UserDefaults cached preview for user: \(userId)")
+            return cachedPreview
+        }
+        
+        // If not in cache, fetch from Firebase
+        do {
+            print("🔍 Fetching user preview for ID: \(userId)")
+            let ref = Database.database().reference().child("users").child(userId)
+            
+            // Only fetch the fields we need for a preview
+            let snapshot = try await ref.child("username").getData()
+            let fullnameSnapshot = try await ref.child("fullname").getData()
+            
+            guard let username = snapshot.value as? String else {
+                print("❌ Username not found")
+                return nil
+            }
+            
+            let fullname = fullnameSnapshot.value as? String ?? username
+            
+            let userPreview = UserPreviewModel(uid: userId, username: username, fullname: fullname)
+            
+            // Cache the preview
+            cacheUserPreview(userPreview)
+            
+            print("✅ Successfully fetched user preview for: \(username)")
+            return userPreview
+        } catch {
+            print("❌ Error fetching user preview:", error)
+            return nil
+        }
+    }
+
+    // MARK: - Fetch Specific User (full details)
     func fetchSpecificUser(userId: String) async -> UserModel? {
         do {
             print("🔍 Fetching specific user with ID: \(userId)")
@@ -79,54 +135,17 @@ class UserViewModel: ObservableObject {
                 return nil
             }
 
-            let userModel = try decodeUserFromFirebase(value, uid: userId)
+            let userModel = try UserModel.fromFirebaseData(value, uid: userId)
+            
+            // Cache the preview for future use
+            cacheUserPreview(userModel.preview)
+            
             print("✅ Successfully fetched specific user: \(userModel.username)")
             return userModel
         } catch {
             print("❌ Error fetching specific user:", error)
             return nil
         }
-    }
-
-    // MARK: - Decode User
-    private func decodeUserFromFirebase(_ data: [String: Any], uid: String) throws -> UserModel {
-        guard let username = data["username"] as? String else {
-            throw NSError(domain: "UserViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Missing username"])
-        }
-        guard let email = data["email"] as? String else {
-            throw NSError(domain: "UserViewModel", code: 2, userInfo: [NSLocalizedDescriptionKey: "Missing email"])
-        }
-
-        let fullname = data["fullname"] as? String ?? username
-        let aboutMe = data["aboutMe"] as? String ?? ""
-        let bondsCount = data["bondsCount"] as? Int ?? 0
-        let interests = data["interests"] as? [String] ?? []
-        
-        // Ensure we properly handle these complex types
-        var bondedUserIds: [String] = []
-        if let bondedDict = data["bondedUserIds"] as? [String: Bool] {
-            bondedUserIds = Array(bondedDict.keys)
-        } else if let bondedArray = data["bondedUserIds"] as? [String] {
-            bondedUserIds = bondedArray
-        }
-        
-        let bondRequestsSent = data["bondRequestsSent"] as? [String: Int] ?? [:]
-        let bondRequestsReceived = data["bondRequestsReceived"] as? [String: Int] ?? [:]
-        let createdAt = data["createdAt"] as? String ?? ""
-
-        return UserModel(
-            uid: uid,
-            username: username,
-            fullname: fullname,
-            email: email,
-            aboutMe: aboutMe,
-            bondsCount: bondsCount,
-            interests: interests,
-            bondedUserIds: bondedUserIds,
-            bondRequestsSent: bondRequestsSent,
-            bondRequestsReceived: bondRequestsReceived,
-            createdAt: createdAt
-        )
     }
 
     // MARK: - Update User Methods
@@ -160,14 +179,19 @@ class UserViewModel: ObservableObject {
             .child("fullname")
             .setValue(fullname)
         user?.fullname = fullname
-        if let user = user { saveUserToCache(user) }
+        
+        // Update both full user cache and preview cache
+        if let user = user {
+            saveUserToCache(user)
+            cacheUserPreview(user.preview)
+        }
     }
 
-    // MARK: - Cache Functions
+    // MARK: - Full User Cache Functions
     private func saveUserToCache(_ user: UserModel) {
         do {
             let data = try JSONEncoder().encode(user)
-            UserDefaults.standard.set(data, forKey: cacheKey)
+            UserDefaults.standard.set(data, forKey: fullUserCacheKey)
             print("✅ User cached successfully")
         } catch {
             print("❌ Failed to cache user:", error)
@@ -175,7 +199,7 @@ class UserViewModel: ObservableObject {
     }
 
     private func loadUserFromCache() {
-        guard let data = UserDefaults.standard.data(forKey: cacheKey) else {
+        guard let data = UserDefaults.standard.data(forKey: fullUserCacheKey) else {
             print("⚠️ No cached user found")
             return
         }
@@ -191,7 +215,7 @@ class UserViewModel: ObservableObject {
     
     // Synchronous version that returns the user instead of setting the property
     private func loadUserFromCacheSync() -> UserModel? {
-        guard let data = UserDefaults.standard.data(forKey: cacheKey) else {
+        guard let data = UserDefaults.standard.data(forKey: fullUserCacheKey) else {
             return nil
         }
 
@@ -202,9 +226,47 @@ class UserViewModel: ObservableObject {
             return nil
         }
     }
-
-    func clearUserCache() {
-        UserDefaults.standard.removeObject(forKey: cacheKey)
-        print("🧹 Cleared cached user")
+    
+    // MARK: - User Preview Cache Functions
+    private func cacheUserPreview(_ preview: UserPreviewModel) {
+        // Update in-memory cache
+        userPreviewsCache[preview.uid] = preview
+        
+        // Update UserDefaults cache
+        var cachedPreviews = loadUserPreviewsFromCache() ?? [:]
+        cachedPreviews[preview.uid] = preview
+        
+        do {
+            let data = try JSONEncoder().encode(cachedPreviews)
+            UserDefaults.standard.set(data, forKey: userPreviewsCacheKey)
+            print("✅ User preview cached successfully")
+        } catch {
+            print("❌ Failed to cache user preview:", error)
+        }
     }
+    
+    private func loadUserPreviewsFromCache() -> [String: UserPreviewModel]? {
+        guard let data = UserDefaults.standard.data(forKey: userPreviewsCacheKey) else {
+            return nil
+        }
+        
+        do {
+            return try JSONDecoder().decode([String: UserPreviewModel].self, from: data)
+        } catch {
+            print("❌ Failed to load cached user previews:", error)
+            return nil
+        }
+    }
+
+    func clearAllCaches() {
+        UserDefaults.standard.removeObject(forKey: fullUserCacheKey)
+        UserDefaults.standard.removeObject(forKey: userPreviewsCacheKey)
+        userPreviewsCache.removeAll()
+        print("🧹 Cleared all user caches")
+    }
+    
+//    func clearUserCache() {
+//        UserDefaults.standard.removeObject(forKey: fullUserCacheKey)
+//        print("🧹 Cleared cached user")
+//    }
 }

@@ -37,7 +37,7 @@ struct SideBarMenuView: View {
             SideBarButton(.logout) {
                 Task {
                     await authViewModel.handleLogout()
-                    userViewModel.clearUserCache()
+                    userViewModel.clearAllCaches()
                     userViewModel.user = nil
                 }
             }

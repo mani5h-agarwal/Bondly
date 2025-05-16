@@ -1,52 +1,8 @@
-////
-////  NewBondViewModel.swift
-////  Bondly
-////
-////  Created by Manish Agarwal on 13/05/25.
-////
-//
-//import Foundation
-//import FirebaseDatabase
-//import FirebaseAuth
-//
-//@MainActor
-//class NewBondViewModel: ObservableObject {
-//    @Published var searchText: String = ""
-//    @Published var searchResults: [UserPreviewModel] = []
-//    @Published var isSearching = false
-//
-//    func searchUsers() async {
-//        guard !searchText.isEmpty else { return }
-//        isSearching = true
-//        let dbRef = Database.database().reference().child("users")
-//        
-//        dbRef.observeSingleEvent(of: .value) { [weak self] snapshot in
-//            guard let self = self else { return }
-//            var matches: [UserPreviewModel] = []
-//
-//            for child in snapshot.children {
-//                if let snap = child as? DataSnapshot,
-//                   let dict = snap.value as? [String: Any],
-//                   let username = dict["username"] as? String,
-//                   username.lowercased().contains(self.searchText.lowercased()) {
-//
-//                    let uid = snap.key
-//                    let user = UserPreviewModel(
-//                        uid: uid,
-//                        username: username,
-//                        fullname: dict["fullname"] as? String ?? username,
-//                        aboutMe: dict["aboutMe"] as? String ?? ""
-//                    )
-//                    matches.append(user)
-//                }
-//            }
-//            self.searchResults = matches
-//            self.isSearching = false
-//        }
-//    }
-//}
-
-
+//////
+//////  NewBondViewModel.swift
+//////  Bondly
+//////
+//////  Created by Manish Agarwal on 13/05/25.
 
 import Foundation
 import FirebaseDatabase
@@ -55,7 +11,7 @@ import Combine
 @MainActor
 class NewBondViewModel: ObservableObject {
     @Published var searchText = ""
-    @Published var searchResults: [UserModel] = []
+    @Published var searchResults: [UserPreviewModel] = []
     @Published var isSearching = false
     
     private let dbRef = Database.database().reference()
@@ -81,16 +37,16 @@ class NewBondViewModel: ObservableObject {
                 return
             }
             
-            // Process users
-            var results: [UserModel] = []
+            // Process users - only extract needed fields for preview
+            var results: [UserPreviewModel] = []
             
             for (uid, userData) in usersDict {
                 // First check if username contains search text (case-insensitive)
                 if let username = userData["username"] as? String,
                    username.lowercased().contains(lowercaseSearchText) {
-                    // Parse the user data
-                    if let user = try? decodeUserFromFirebase(userData, uid: uid) {
-                        results.append(user)
+                    // Only parse the fields we need for display
+                    if let userPreview = try? UserPreviewModel.fromFirebaseData(userData, uid: uid) {
+                        results.append(userPreview)
                     }
                 }
             }
@@ -123,43 +79,21 @@ class NewBondViewModel: ObservableObject {
         }
     }
     
-    private func decodeUserFromFirebase(_ data: [String: Any], uid: String) throws -> UserModel {
-        guard let username = data["username"] as? String else {
-            throw NSError(domain: "NewBondViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Missing username"])
+    // Method to fetch full user details when needed
+    func fetchFullUserDetails(for userId: String) async -> UserModel? {
+        do {
+            let userRef = dbRef.child("users").child(userId)
+            let snapshot = try await userRef.getData()
+            
+            guard let userData = snapshot.value as? [String: Any] else {
+                print("❌ Failed to fetch full user data")
+                return nil
+            }
+            
+            return try UserModel.fromFirebaseData(userData, uid: userId)
+        } catch {
+            print("❌ Error fetching full user details: \(error)")
+            return nil
         }
-        guard let email = data["email"] as? String else {
-            throw NSError(domain: "NewBondViewModel", code: 2, userInfo: [NSLocalizedDescriptionKey: "Missing email"])
-        }
-
-        let fullname = data["fullname"] as? String ?? username
-        let aboutMe = data["aboutMe"] as? String ?? ""
-        let bondsCount = data["bondsCount"] as? Int ?? 0
-        let interests = data["interests"] as? [String] ?? []
-        
-        // Ensure we properly handle these complex types
-        var bondedUserIds: [String] = []
-        if let bondedDict = data["bondedUserIds"] as? [String: Bool] {
-            bondedUserIds = Array(bondedDict.keys)
-        } else if let bondedArray = data["bondedUserIds"] as? [String] {
-            bondedUserIds = bondedArray
-        }
-        
-        let bondRequestsSent = data["bondRequestsSent"] as? [String: Int] ?? [:]
-        let bondRequestsReceived = data["bondRequestsReceived"] as? [String: Int] ?? [:]
-        let createdAt = data["createdAt"] as? String ?? ""
-
-        return UserModel(
-            uid: uid,
-            username: username,
-            fullname: fullname,
-            email: email,
-            aboutMe: aboutMe,
-            bondsCount: bondsCount,
-            interests: interests,
-            bondedUserIds: bondedUserIds,
-            bondRequestsSent: bondRequestsSent,
-            bondRequestsReceived: bondRequestsReceived,
-            createdAt: createdAt
-        )
     }
 }
