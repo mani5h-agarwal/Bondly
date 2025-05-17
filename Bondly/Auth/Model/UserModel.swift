@@ -50,6 +50,7 @@ struct UserModel: UserModelProtocol, Codable {
     var bondRequestsSent: [String: Int]    // [userId: timestamp]
     var bondRequestsReceived: [String: Int] // [userId: timestamp]
     let createdAt: String
+    let moments: [String]
     
     var id: String { uid }
     

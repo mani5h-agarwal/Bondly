@@ -25,9 +25,11 @@ struct InputField: View {
                 if isSecure {
                     SecureField(title, text: $text)
                         .focused($isFocused)
+                        .tint(Color("brandPrimary"))
                 } else {
                     TextField(title, text: $text)
                         .focused($isFocused)
+                        .tint(Color("brandPrimary"))
                 }
             }
         }

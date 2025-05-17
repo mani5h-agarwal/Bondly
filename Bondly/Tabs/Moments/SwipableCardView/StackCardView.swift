@@ -8,37 +8,42 @@
 import SwiftUI
 
 struct StackCardView: View {
-    @EnvironmentObject var homeData: HomeViewModel
-    var user: User
-    
+    @EnvironmentObject var momentData: MomentViewModel
+    var moment: Moment
+
     @State var offset: CGFloat = 0
     @GestureState var isDragging: Bool = false
-    
+
     @State var endSwipe: Bool = false
-    
+
     var body: some View {
         GeometryReader { proxy in
             let size = proxy.size
-            let index = CGFloat(homeData.getIndex(user: user))
+            let index = CGFloat(momentData.getIndex(moment: moment))
             let topOffset = (index <= 2 ? index : 2) * 20
-            
+
             ZStack {
                 let card = RoundedRectangle(cornerRadius: 35)
                     .fill(Color.white)
                     .frame(width: max(size.width - topOffset * 1.5, 0), height: size.height)
                     .offset(y: -topOffset)
-                
+
                 if index <= 2 {
                     card
                         .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 1)
                 } else {
                     card
                 }
-                CardContent(user: user)
-                    .padding(20)
+                CardContent(moment: moment)
                     .frame(width: max(size.width - topOffset * 1.5, 0), height: size.height)
                     .offset(y: -topOffset)
-                
+
+            }
+            .onAppear {
+                let index = momentData.getIndex(moment: moment)
+                if momentData.shouldLoadMore(currentIndex: index) {
+                    momentData.loadNextPage()
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
@@ -70,19 +75,35 @@ struct StackCardView: View {
                 })
         )
     }
-    
+
     func getRotation(angle: Double) -> Double{
         let rotation = (offset / (getRect().width - 50)) * angle
         return rotation
     }
-    
+
+//    func endSwipeActions(){
+//        withAnimation(.none){endSwipe = true}
+//
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//            if let _ = momentData.displaying_moments?.first{
+//                let _ = withAnimation{
+//                    momentData.displaying_moments?.removeFirst()
+//                }
+//            }
+//        }
+//    }
     func endSwipeActions(){
-        withAnimation(.none){endSwipe = true}
-        
+        withAnimation(.none){ endSwipe = true }
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if let _ = homeData.displaying_users?.first{
-                let _ = withAnimation{
-                    homeData.displaying_users?.removeFirst()
+            if let firstMoment = momentData.displaying_moments.first {
+                let firstIndex = momentData.getIndex(moment: firstMoment)
+                let _ = withAnimation {
+                    momentData.displaying_moments.removeFirst()
+                }
+                // Check if we need to load more
+                if momentData.shouldLoadMore(currentIndex: firstIndex) {
+                    momentData.loadNextPage()
                 }
             }
         }

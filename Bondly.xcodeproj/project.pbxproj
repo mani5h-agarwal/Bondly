@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		E96882062DCB16E900337D33 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = E96882052DCB16E900337D33 /* FirebaseFirestore */; };
 		E98BF59D2DCA78FB00177315 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = E98BF59C2DCA78FB00177315 /* FirebaseAuth */; };
+		E9A6A73B2DD8CA040057ED8C /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = E9A6A73A2DD8CA040057ED8C /* FirebaseStorage */; };
+		E9A6A73E2DD8D1C30057ED8C /* Cloudinary in Frameworks */ = {isa = PBXBuildFile; productRef = E9A6A73D2DD8D1C30057ED8C /* Cloudinary */; };
+		E9A6A7412DD8E9850057ED8C /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = E9A6A7402DD8E9850057ED8C /* SDWebImageSwiftUI */; };
 		E9FADA8A2DCB27B300D3B05C /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = E9FADA892DCB27B300D3B05C /* FirebaseDatabase */; };
 /* End PBXBuildFile section */
 
@@ -79,7 +82,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E9A6A7412DD8E9850057ED8C /* SDWebImageSwiftUI in Frameworks */,
 				E9FADA8A2DCB27B300D3B05C /* FirebaseDatabase in Frameworks */,
+				E9A6A73B2DD8CA040057ED8C /* FirebaseStorage in Frameworks */,
+				E9A6A73E2DD8D1C30057ED8C /* Cloudinary in Frameworks */,
 				E98BF59D2DCA78FB00177315 /* FirebaseAuth in Frameworks */,
 				E96882062DCB16E900337D33 /* FirebaseFirestore in Frameworks */,
 			);
@@ -145,6 +151,9 @@
 				E98BF59C2DCA78FB00177315 /* FirebaseAuth */,
 				E96882052DCB16E900337D33 /* FirebaseFirestore */,
 				E9FADA892DCB27B300D3B05C /* FirebaseDatabase */,
+				E9A6A73A2DD8CA040057ED8C /* FirebaseStorage */,
+				E9A6A73D2DD8D1C30057ED8C /* Cloudinary */,
+				E9A6A7402DD8E9850057ED8C /* SDWebImageSwiftUI */,
 			);
 			productName = Bondly;
 			productReference = E98BF56B2DCA763A00177315 /* Bondly.app */;
@@ -230,6 +239,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E98BF59B2DCA78FB00177315 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				E9A6A73C2DD8D1C30057ED8C /* XCRemoteSwiftPackageReference "cloudinary_ios" */,
+				E9A6A73F2DD8E9850057ED8C /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E98BF56C2DCA763A00177315 /* Products */;
@@ -604,6 +615,22 @@
 				minimumVersion = 11.12.0;
 			};
 		};
+		E9A6A73C2DD8D1C30057ED8C /* XCRemoteSwiftPackageReference "cloudinary_ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cloudinary/cloudinary_ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.1.0;
+			};
+		};
+		E9A6A73F2DD8E9850057ED8C /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageSwiftUI";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.3;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -616,6 +643,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E98BF59B2DCA78FB00177315 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
+		};
+		E9A6A73A2DD8CA040057ED8C /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E98BF59B2DCA78FB00177315 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		E9A6A73D2DD8D1C30057ED8C /* Cloudinary */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E9A6A73C2DD8D1C30057ED8C /* XCRemoteSwiftPackageReference "cloudinary_ios" */;
+			productName = Cloudinary;
+		};
+		E9A6A7402DD8E9850057ED8C /* SDWebImageSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E9A6A73F2DD8E9850057ED8C /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
+			productName = SDWebImageSwiftUI;
 		};
 		E9FADA892DCB27B300D3B05C /* FirebaseDatabase */ = {
 			isa = XCSwiftPackageProductDependency;

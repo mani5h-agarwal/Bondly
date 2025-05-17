@@ -29,21 +29,13 @@ struct ProfileHeaderView: View {
 //                    Circle().stroke(Color.white, lineWidth: 3).padding(2)
 //                )
 //            
-            Circle()
-                .fill(Color("brandPrimary").opacity(0.3))
-                .frame(width: 100, height: 100)
-                .overlay(
-                    Text(String(userName.prefix(1).uppercased()))
-                        .font(.title)
-                        .foregroundColor(Color("brandPrimary"))
-                )
+            UserAvatar(username: userName, size: 100)
                 .overlay(
                     Circle().stroke(Color.purple.opacity(0.5), lineWidth: 6)
                 )
                 .overlay(
                     Circle().stroke(Color.white, lineWidth: 3).padding(2)
                 )
-
             VStack(spacing: 4) {
                 if isEditing {
                     TextField("Full Name", text: $editedFullName)

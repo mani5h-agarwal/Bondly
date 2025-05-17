@@ -1,39 +1,36 @@
-//
-//  MessageField.swift
-//  Bondly
-//
-//  Created by Manish Agarwal on 16/05/25.
-//
-
+//////
+//////  MessageField.swift
+//////  Bondly
+//////
+//////  Created by Manish Agarwal on 16/05/25.
+//////
 import SwiftUI
 
 struct MessageField: View {
-    var body: some View {
-        HStack(spacing: 5) {
-            TextField("Type a message...", text: .constant(""))
-                .padding(.horizontal, 15)
-                .padding(.vertical, 13)
-                .background(Color.gray.opacity(0.2))
-                .cornerRadius(24) // Rounded pill-like shape
-                .padding(.leading, 8)
-                .tint(Color("brandPrimary"))
+    @State private var messageText = ""
+    var onSend: (String) -> Void
 
-            Button{
-                // Send message action
+    var body: some View {
+        HStack {
+            TextField("Type a message...", text: $messageText)
+                .padding(.horizontal)
+                .padding(.vertical, 12)
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(24)
+
+            Button {
+                guard !messageText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                onSend(messageText)
+                messageText = ""
             } label: {
                 Image(systemName: "paperplane.fill")
-                    .resizable()
-                    .foregroundStyle(Color.white)
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 16, height: 16)
-                    .padding(13)
-                    .padding(.trailing, 2)
+                    .padding()
                     .background(Color("brandPrimary"))
+                    .foregroundColor(.white)
                     .clipShape(Circle())
             }
-            .padding(.trailing, 8)
         }
-        .padding(.bottom, 10)
-        .background(Color(.systemBackground))
+        .padding(.horizontal)
+        .padding(.bottom)
     }
 }

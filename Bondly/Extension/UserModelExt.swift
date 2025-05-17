@@ -32,7 +32,8 @@ extension UserModel {
         let bondRequestsSent = data["bondRequestsSent"] as? [String: Int] ?? [:]
         let bondRequestsReceived = data["bondRequestsReceived"] as? [String: Int] ?? [:]
         let createdAt = data["createdAt"] as? String ?? ""
-
+        let moments = data["moments"] as? [String] ?? []
+        
         return UserModel(
             uid: uid,
             username: username,
@@ -44,7 +45,8 @@ extension UserModel {
             bondedUserIds: bondedUserIds,
             bondRequestsSent: bondRequestsSent,
             bondRequestsReceived: bondRequestsReceived,
-            createdAt: createdAt
+            createdAt: createdAt,
+            moments: moments
         )
     }
 }

@@ -12,6 +12,7 @@ struct AppTabView: View {
     @State var selectedTabBottom: Int = 0
     @State private var showFABView: Bool = false
     @Binding var showMenu: Bool
+    @StateObject var momentData: MomentViewModel = MomentViewModel()
     
     var body: some View {
         ZStack{
@@ -28,7 +29,16 @@ struct AppTabView: View {
                 
                 NavigationStack{
                     Moments()
-                        .withLeadingMenuToolbar(title: "Moments", showMenu: $showMenu)
+                        .withLeadingMenuToolbar(
+                            title: "Moments",
+                            showMenu: $showMenu,
+                            onRefresh: {
+                                Task {
+                                    await momentData.refreshMoments()
+                                }
+                            }
+                        )
+                        .environmentObject(momentData)
                     
                 }
                 .tabItem {

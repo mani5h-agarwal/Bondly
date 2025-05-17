@@ -1,10 +1,10 @@
-//
-//  ChatDetailView.swift
-//  Bondly
-//
-//  Created by Manish Agarwal on 16/05/25.
-//
-
+////////
+////////  ChatDetailView.swift
+////////  Bondly
+////////
+////////  Created by Manish Agarwal on 16/05/25.
+////////
+//////
 import SwiftUI
 
 struct ChatItem: Identifiable {
@@ -17,7 +17,8 @@ struct ChatDetailView: View {
     @State private var userPreview: UserPreviewModel?
     @State private var isLoading = true
     @EnvironmentObject var userViewModel: UserViewModel
-    
+    @StateObject private var chatViewModel = ChatViewModel()
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -32,18 +33,6 @@ struct ChatDetailView: View {
             .navigationTitle(userPreview?.fullname ?? "Chat")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: ProfileView(userId: userId)) {
-                        if let user = userPreview {
-                            NavigationLink(destination: ProfileView(userId: userId)) {
-                                UserAvatar(username: user.username, size: 30)
-                            }
-                        } else {
-                            Image(systemName: "person.circle")
-                                .foregroundColor(Color("brandPrimary"))
-                        }
-                    }
-                }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
                         dismiss()
@@ -53,59 +42,62 @@ struct ChatDetailView: View {
                     }
                 }
 
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if let user = userPreview {
+                        NavigationLink(destination: ProfileView(userId: userId)) {
+                            UserAvatar(username: user.username, size: 30)
+                        }
+                    } else {
+                        Image(systemName: "person.circle")
+                            .foregroundColor(Color("brandPrimary"))
+                    }
+                }
             }
             .task {
                 await loadUserData()
             }
         }
     }
-    
+
     private func chatInterface(with user: UserPreviewModel) -> some View {
         VStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    ForEach(1...5, id: \.self) { i in
-                        HStack {
-                            if i % 2 == 0 {
-                                Spacer()
-                                Text("This is where your message w o u l d a p p e a r")
-                                    .padding()
-                                    .background(Color("brandPrimary").opacity(0.2))
-                                    .foregroundColor(.primary)
-                                    .clipShape(
-                                        .rect(
-                                            topLeadingRadius: 12,
-                                            bottomLeadingRadius: 12,
-                                            bottomTrailingRadius: 0,
-                                            topTrailingRadius: 12
-                                        )
-                                    )
-                                    .frame(maxWidth: UIScreen.main.bounds.width * 0.8, alignment: .trailing)
-                            } else {
-                                Text("This is where \(user.fullname)'s message would appear")
-                                    .padding()
-                                    .background(Color.gray.opacity(0.2))
-                                    .foregroundColor(.primary)
-                                    .clipShape(
-                                        .rect(
-                                            topLeadingRadius: 0,
-                                            bottomLeadingRadius: 12,
-                                            bottomTrailingRadius: 12,
-                                            topTrailingRadius: 12
-                                        )
-                                    )
-                                    .frame(maxWidth: UIScreen.main.bounds.width * 0.8, alignment: .leading)
-                                Spacer()
-                            }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack {
+                        ForEach(chatViewModel.messages) { msg in
+                            ChatBubble(
+                                message: msg,
+                                isCurrentUser: msg.senderId == userViewModel.user?.uid
+                            )
+                            .id(msg.id)
                         }
-                        .padding(.horizontal)
+                    }
+                }
+                .onChange(of: chatViewModel.messages.count) {
+                    if let lastId = chatViewModel.messages.last?.id {
+                        withAnimation {
+                            proxy.scrollTo(lastId, anchor: .bottom)
+                        }
+                    }
+                }
+                .onAppear {
+                    if let lastId = chatViewModel.messages.last?.id {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            proxy.scrollTo(lastId, anchor: .bottom)
+                        }
                     }
                 }
             }
-            MessageField()
+
+            MessageField(onSend: { text in
+                sendMessage(from: userViewModel.user?.uid, to: userId, text: text)
+            })
+        }
+        .onAppear {
+            chatViewModel.observeMessages(with: userId)
         }
     }
-    
+
     private func loadUserData() async {
         isLoading = true
         userPreview = await userViewModel.fetchUserPreview(userId: userId)
@@ -113,5 +105,42 @@ struct ChatDetailView: View {
     }
 }
 
+struct ChatBubble: View {
+    let message: Message
+    let isCurrentUser: Bool
 
+    var body: some View {
+        HStack(alignment: .bottom) {
+            if isCurrentUser { Spacer() }
 
+            VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 4) {
+                Text(message.text)
+                    .padding()
+                    .background(isCurrentUser ? Color("brandPrimary").opacity(0.2) : Color.gray.opacity(0.2))
+                    .clipShape(
+                        .rect(
+                            topLeadingRadius: isCurrentUser ? 12 : 0,
+                            bottomLeadingRadius: 12,
+                            bottomTrailingRadius: isCurrentUser ? 0 : 12,
+                            topTrailingRadius: 12
+                        )
+                    )
+
+                Text(timeString(from: message.timestamp))
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 4)
+            }
+
+            if !isCurrentUser { Spacer() }
+        }
+        .padding(.horizontal)
+    }
+
+    private func timeString(from timestamp: Double) -> String {
+        let date = Date(timeIntervalSince1970: timestamp)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: date)
+    }
+}

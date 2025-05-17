@@ -16,19 +16,19 @@ class UserViewModel: ObservableObject {
     
     // In-memory cache for user previews to reduce firebase calls
     private var userPreviewsCache: [String: UserPreviewModel] = [:]
-
+    
     // MARK: - Fetch Current User
     func fetchUser(forceRefresh: Bool = false) async {
         isLoading = true
         errorMessage = nil
-
+        
         guard let uid = Auth.auth().currentUser?.uid else {
             errorMessage = "No authenticated user found"
             isLoading = false
             print("Error: No authenticated user found")
             return
         }
-
+        
         print("Fetching current user with UID: \(uid), forceRefresh: \(forceRefresh)")
         
         // If we're not forcing a refresh, try to use the cached data first
@@ -40,21 +40,21 @@ class UserViewModel: ObservableObject {
         // Always fetch fresh data from Firebase
         await fetchAndCacheCurrentUser(uid: uid)
     }
-
+    
     private func fetchAndCacheCurrentUser(uid: String) async {
         do {
             let ref = Database.database().reference().child("users").child(uid)
             let snapshot = try await ref.getData()
-
+            
             guard let value = snapshot.value as? [String: Any] else {
                 errorMessage = "User data not found or in unexpected format"
                 isLoading = false
                 print("Error: User data not found or in unexpected format")
                 return
             }
-
+            
             let userModel = try UserModel.fromFirebaseData(value, uid: uid)
-
+            
             DispatchQueue.main.async {
                 self.user = userModel
                 self.saveUserToCache(userModel)
@@ -76,7 +76,7 @@ class UserViewModel: ObservableObject {
             }
         }
     }
-
+    
     // MARK: - Fetch User Preview
     func fetchUserPreview(userId: String) async -> UserPreviewModel? {
         // Check in-memory cache first
@@ -122,19 +122,19 @@ class UserViewModel: ObservableObject {
             return nil
         }
     }
-
+    
     // MARK: - Fetch Specific User (full details)
     func fetchSpecificUser(userId: String) async -> UserModel? {
         do {
             print("🔍 Fetching specific user with ID: \(userId)")
             let ref = Database.database().reference().child("users").child(userId)
             let snapshot = try await ref.getData()
-
+            
             guard let value = snapshot.value as? [String: Any] else {
                 print("❌ Specific user data not found or in unexpected format")
                 return nil
             }
-
+            
             let userModel = try UserModel.fromFirebaseData(value, uid: userId)
             
             // Cache the preview for future use
@@ -147,7 +147,7 @@ class UserViewModel: ObservableObject {
             return nil
         }
     }
-
+    
     // MARK: - Update User Methods
     func updateAboutMe(_ aboutMe: String) async throws {
         guard let uid = user?.uid else { return }
@@ -159,7 +159,7 @@ class UserViewModel: ObservableObject {
         user?.aboutMe = aboutMe
         if let user = user { saveUserToCache(user) }
     }
-
+    
     func updateInterests(_ interests: [String]) async throws {
         guard let uid = user?.uid else { return }
         try await Database.database().reference()
@@ -170,7 +170,7 @@ class UserViewModel: ObservableObject {
         user?.interests = interests
         if let user = user { saveUserToCache(user) }
     }
-
+    
     func updateFullName(_ fullname: String) async throws {
         guard let uid = user?.uid else { return }
         try await Database.database().reference()
@@ -186,7 +186,7 @@ class UserViewModel: ObservableObject {
             cacheUserPreview(user.preview)
         }
     }
-
+    
     // MARK: - Full User Cache Functions
     private func saveUserToCache(_ user: UserModel) {
         do {
@@ -197,13 +197,13 @@ class UserViewModel: ObservableObject {
             print("❌ Failed to cache user:", error)
         }
     }
-
+    
     private func loadUserFromCache() {
         guard let data = UserDefaults.standard.data(forKey: fullUserCacheKey) else {
             print("⚠️ No cached user found")
             return
         }
-
+        
         do {
             let cachedUser = try JSONDecoder().decode(UserModel.self, from: data)
             self.user = cachedUser
@@ -218,7 +218,7 @@ class UserViewModel: ObservableObject {
         guard let data = UserDefaults.standard.data(forKey: fullUserCacheKey) else {
             return nil
         }
-
+        
         do {
             return try JSONDecoder().decode(UserModel.self, from: data)
         } catch {
@@ -257,16 +257,11 @@ class UserViewModel: ObservableObject {
             return nil
         }
     }
-
+    
     func clearAllCaches() {
         UserDefaults.standard.removeObject(forKey: fullUserCacheKey)
         UserDefaults.standard.removeObject(forKey: userPreviewsCacheKey)
         userPreviewsCache.removeAll()
         print("🧹 Cleared all user caches")
     }
-    
-//    func clearUserCache() {
-//        UserDefaults.standard.removeObject(forKey: fullUserCacheKey)
-//        print("🧹 Cleared cached user")
-//    }
 }
